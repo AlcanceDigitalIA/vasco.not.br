@@ -1,0 +1,44 @@
+Options -Indexes
+ServerSignature Off
+
+# Segurança — cabeçalhos HTTP
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    Header always set Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://maps.googleapis.com https://maps.gstatic.com; script-src 'self' https://maps.googleapis.com; frame-src https://www.google.com;"
+</IfModule>
+
+# Bloquear acesso à pasta includes
+<FilesMatch "\.(php)$">
+    <If "%{REQUEST_URI} =~ m#^/includes/#">
+        Order Deny,Allow
+        Deny from all
+    </If>
+</FilesMatch>
+
+# Redirecionar para HTTPS
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # URL amigável para o handler de contato
+    RewriteRule ^contato$ index.php?secao=contato [L,QSA]
+</IfModule>
+
+# Proteger arquivos sensíveis
+<FilesMatch "(^\.htaccess|\.env|config\.php)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Cache de imagens e CSS
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png  "access plus 1 month"
+    ExpiresByType text/css   "access plus 1 week"
+</IfModule>
